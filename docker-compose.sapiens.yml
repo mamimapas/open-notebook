@@ -1,0 +1,64 @@
+# Compose aislado para SAPIENSDATAAI — NO toca producción FastAPI (puerto 8000).
+# SurrealDB remapeado a 8011 (host) para no chocar con nuestro FastAPI local.
+# Encryption key inyectada via env OPEN_NOTEBOOK_ENCRYPTION_KEY (definir en shell o aquí).
+# Levantar con: docker compose -f docker-compose.sapiens.yml up -d
+services:
+  surrealdb:
+    image: surrealdb/surrealdb:v2
+    command: start --log info --user root --pass root rocksdb:/mydata/mydatabase.db
+    user: root
+    ports:
+      - "8011:8000"   # host 8011 -> contenedor 8000 (evita choque con FastAPI)
+    volumes:
+      - ./surreal_data:/mydata
+    environment:
+      - SURREAL_EXPERIMENTAL_GRAPHQL=true
+    restart: always
+    pull_policy: always
+
+  embeddings:
+    build:
+      context: .
+      dockerfile: Dockerfile.embeddings
+    image: sapiens/embeddings-sidecar:latest
+    expose:
+      - "7997"        # solo red interna; open_notebook lo alcanza como http://embeddings:7997
+    ports:
+      - "7997:7997"   # también al host por si un cron local quiere usarlo
+    volumes:
+      - ./embeddings_cache:/cache
+    restart: always
+
+  edge_tts:
+    build:
+      context: .
+      dockerfile: Dockerfile.tts
+    image: sapiens/edge-tts-adapter:latest
+    expose:
+      - "7998"        # interno: open_notebook lo alcanza como http://edge_tts:7998
+    ports:
+      - "7998:7998"   # también al host para tests/crons locales
+    environment:
+      - TTS_SPEED=1.2   # voces +20% (open-notebook no expone speed; override global)
+    restart: always
+
+  open_notebook:
+    image: lfnovo/open_notebook:v1-latest
+    ports:
+      - "8502:8502"   # Web UI
+      - "5055:5055"   # REST API (la que consumirán los crons)
+    environment:
+      - OPEN_NOTEBOOK_ENCRYPTION_KEY=${OPEN_NOTEBOOK_ENCRYPTION_KEY:-0FKha3Bhe3VGlW91ZmATcUgEadnCwZ2SGGcMnmT2dPQ}
+      - SURREAL_URL=ws://surrealdb:8000/rpc
+      - SURREAL_USER=root
+      - SURREAL_PASSWORD=root
+      - SURREAL_NAMESPACE=open_notebook
+      - SURREAL_DATABASE=open_notebook
+    volumes:
+      - ./notebook_data:/app/data
+    depends_on:
+      - surrealdb
+      - embeddings
+      - edge_tts
+    restart: always
+    pull_policy: always
