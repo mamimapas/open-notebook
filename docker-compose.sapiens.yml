@@ -42,20 +42,10 @@ services:
       - TTS_SPEED=1.2   # voces +20% (open-notebook no expone speed; override global)
     restart: always
 
-  kokoro_tts:
-    build:
-      context: .
-      dockerfile: Dockerfile.kokoro
-    image: sapiens/kokoro-adapter:latest
-    expose:
-      - "7999"        # interno: open_notebook lo alcanza como http://kokoro_tts:7999
-    ports:
-      - "7999:7999"   # también al host para tests/crons locales
-    environment:
-      - TTS_SPEED=1.2   # voces +20% (igual que Edge; open-notebook manda 1.0)
-    volumes:
-      - ./kokoro_cache:/root/.cache/huggingface   # cachea el modelo entre reinicios
-    restart: always
+  # NOTA: el sidecar kokoro_tts (Dockerfile.kokoro + kokoro_adapter.py) se evaluó como
+  # alternativa a Edge (2026-06-15) pero se DESCARTÓ: las voces "español" de Kokoro-82M
+  # suenan con acento británico (fonemizador con sesgo inglés). Edge se mantiene como TTS.
+  # Los ficheros quedan como referencia; el servicio NO se levanta.
 
   open_notebook:
     image: lfnovo/open_notebook:v1-latest
