@@ -1,0 +1,19 @@
+# Adaptador TTS OpenAI-compatible -> Kokoro-82M (voces neuronales locales, naturales, gratis).
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# espeak-ng: fonemizador que Kokoro usa para español (misaki -> espeak fallback).
+# ffmpeg: para convertir el wav de Kokoro a mp3.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    espeak-ng ffmpeg && rm -rf /var/lib/apt/lists/*
+
+# torch CPU (más ligero que la build con CUDA) + kokoro + deps del adaptador.
+RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch && \
+    pip install --no-cache-dir kokoro soundfile numpy fastapi "uvicorn[standard]"
+
+COPY kokoro_adapter.py /app/kokoro_adapter.py
+
+ENV TTS_PORT=7999
+EXPOSE 7999
+CMD ["python", "kokoro_adapter.py"]
