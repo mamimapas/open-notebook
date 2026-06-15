@@ -10,6 +10,7 @@ Mantiene speaker_config y modelos por defecto (v4-flash). Borra y recrea (no hay
 import json, subprocess
 
 ON = "http://localhost:5055"
+V4FLASH = "model:cv0n80tzyto4hke1z570"  # deepseek-v4-flash (default transformation, mas barato que v4-pro)
 
 
 def curl(method, path, body=None):
@@ -77,15 +78,29 @@ PROFILES = [
      "speaker_config": "sapiens_dueto_en", "language": "en", "briefing": BRIEFING_MEDIO_EN},
 ]
 
-NUM_SEGMENTS = 6
+NUM_SEGMENTS = 8  # 6 seg -> 23min para el RSI; 8 apunta a ~30-33min (~mitad del denso de 66min)
+
+def current_id(name):
+    """Busca el id actual del perfil por nombre (la API no tiene PUT; hay que borrar por id real)."""
+    allp = curl("GET", "/api/episode-profiles")
+    if isinstance(allp, list):
+        for pr in allp:
+            if pr.get("name") == name:
+                return pr.get("id")
+    return None
+
 
 for p in PROFILES:
-    # borrar el existente
-    curl("DELETE", f"/api/episode-profiles/{p['old_id']}")
+    # borrar el existente buscando su id ACTUAL (no el hardcoded, que pudo cambiar)
+    cid = current_id(p["name"])
+    if cid:
+        curl("DELETE", f"/api/episode-profiles/{cid}")
+        print(f"borrado {p['name']}: {cid}")
     res = curl("POST", "/api/episode-profiles", {
         "name": p["name"],
         "description": p["description"],
         "speaker_config": p["speaker_config"],
+        "outline_llm": V4FLASH, "transcript_llm": V4FLASH,
         "language": p["language"],
         "num_segments": NUM_SEGMENTS,
         "default_briefing": p["briefing"],
