@@ -1,0 +1,19 @@
+services:
+  chatterbox_tts:
+    profiles: ["chatterbox-canary"]
+    build:
+      context: .
+      dockerfile: Dockerfile.chatterbox
+    image: sapiens/chatterbox-es-es-adapter:cpu
+    ports:
+      - "7999:7999"
+    environment:
+      - TTS_CANDIDATE_TIMEOUT_SECONDS=180
+      - TTS_MAX_INPUT_CHARS=20000
+      - CHATTERBOX_MODEL_ROOT=/models
+      - HF_HOME=/models/huggingface
+    volumes:
+      - G:/FASTAPI/models/chatterbox-es-es:/models
+    # Candidate retained for explicit benchmarks only.  The measured CPU RTF
+    # is not eligible for automatic startup or production promotion.
+    restart: "no"

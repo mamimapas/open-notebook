@@ -1,0 +1,37 @@
+FROM python:3.11-slim
+
+ARG CHATTERBOX_SPACE_COMMIT=f7991c03de6130583b1f103477d139de96329994
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ffmpeg git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu \
+        torch==2.8.0 torchaudio==2.8.0 \
+    && pip install --no-cache-dir \
+        fastapi "uvicorn[standard]" edge-tts soundfile \
+        numpy==1.26.0 resampy==0.4.3 librosa==0.10.0 s3tokenizer \
+        transformers==4.46.3 diffusers==0.29.0 omegaconf==2.3.0 \
+        resemble-perth==1.0.1 silero-vad==5.1.2 conformer==0.3.2 \
+        safetensors huggingface_hub
+
+# The Space's pinned commit is its current main HEAD.  A partial clone is not
+# used because the Hugging Face promisor endpoint intermittently returns an
+# incomplete packfile during Docker builds.
+RUN git clone --depth 1 --branch main \
+        https://huggingface.co/spaces/ResembleAI/Chatterbox-Multilingual-TTS-es-es \
+        /opt/chatterbox-space \
+    && test "$(git -C /opt/chatterbox-space rev-parse HEAD)" = "$CHATTERBOX_SPACE_COMMIT" \
+    && rm -rf /opt/chatterbox-space/.git
+
+COPY chatterbox_tts_adapter.py /app/chatterbox_tts_adapter.py
+
+ENV TTS_PORT=7999 \
+    CHATTERBOX_MODEL_ROOT=/models \
+    CHATTERBOX_SOURCE_DIR=/opt/chatterbox-space/chatterbox/src \
+    HF_HOME=/models/huggingface \
+    HF_HUB_DISABLE_TELEMETRY=1
+
+EXPOSE 7999
+CMD ["python", "chatterbox_tts_adapter.py"]
