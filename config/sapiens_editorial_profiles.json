@@ -1,0 +1,32 @@
+{
+  "schema_version": "sapiens-editorial-profiles/1",
+  "base_profile": "sapiens_largo",
+  "speaker_profile": "sapiens_dueto",
+  "expected_voices": [
+    "es-ES-AlvaroNeural",
+    "es-ES-ElviraNeural"
+  ],
+  "profiles": [
+    {
+      "name": "sapiens_papers",
+      "description": "Diálogo didáctico para papers: método, resultado, límites y reproducibilidad.",
+      "language": "es",
+      "num_segments": 6,
+      "default_briefing": "Abre con el hecho principal y orienta en una frase. Explica el mecanismo con claridad, usa una analogía sólo cuando aporte comprensión, formula preguntas críticas, separa evidencia, límites e incertidumbre, explica consecuencias verificables y cierra de forma concisa. Conversación natural entre Elena y Daniel, audio-first. Prohibido leer literalmente las fuentes, inventar experiencias, forzar bromas, repetir bloques, presentar afirmaciones ausentes de las fuentes o fingir certeza. En papers define el problema, la aportación nueva, la evidencia, la comparación con el baseline, las limitaciones y qué sería necesario para reproducirlo."
+    },
+    {
+      "name": "sapiens_noticias_ia",
+      "description": "Diálogo editorial para noticias de IA, centrado en mecanismo e impacto práctico.",
+      "language": "es",
+      "num_segments": 5,
+      "default_briefing": "Abre con el hecho principal y orienta en una frase. Explica el mecanismo con claridad, usa una analogía sólo cuando aporte comprensión, formula preguntas críticas, separa evidencia, límites e incertidumbre, explica consecuencias verificables y cierra de forma concisa. Conversación natural entre Elena y Daniel, audio-first. Prohibido leer literalmente las fuentes, inventar experiencias, forzar bromas, repetir bloques, presentar afirmaciones ausentes de las fuentes o fingir certeza. En noticias de IA empieza por el cambio concreto, explica cómo funciona, quién queda afectado, qué no está demostrado y qué decisión práctica permite tomar."
+    },
+    {
+      "name": "sapiens_noticias_reales",
+      "description": "Diálogo editorial para actualidad real con hechos, contexto y límites.",
+      "language": "es",
+      "num_segments": 5,
+      "default_briefing": "Abre con el hecho principal y orienta en una frase. Explica el mecanismo con claridad, usa una analogía sólo cuando aporte comprensión, formula preguntas críticas, separa evidencia, límites e incertidumbre, explica consecuencias verificables y cierra de forma concisa. Conversación natural entre Elena y Daniel, audio-first. Prohibido leer literalmente las fuentes, inventar experiencias, forzar bromas, repetir bloques, presentar afirmaciones ausentes de las fuentes o fingir certeza. En noticias reales distingue hechos de interpretación, aporta contexto suficiente, evita partidismo automático y no atribuyas consecuencias que las fuentes no sostengan."
+    }
+  ]
+}
