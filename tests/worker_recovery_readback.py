@@ -13,7 +13,7 @@ async def main():
     output = []
     for row in rows:
         audio = row.get('audio')
-        path = Path(audio) if isinstance(audio, str) else None
+        path = Path('/app/data/podcasts') / audio if isinstance(audio, str) else None
         output.append({'id': str(row['id']), 'status': row.get('status'),
                        'episode': row.get('episode'), 'owner': row.get('worker_owner'),
                        'audio_exists': bool(path and path.is_file()),

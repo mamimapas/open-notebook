@@ -27,14 +27,24 @@ async def pending(db_factory):
         cursor = rows[-1]['id']
 
 
-def artifact_exists(result):
+def audio_path(result, base=Path('/app/data/podcasts')):
     if not isinstance(result, dict):
-        return False
+        return None
     value = result.get('audio_file_path') or result.get('audio_file') or result.get('audio_path')
     if not isinstance(value, str):
-        return False
+        return None
     path = Path(value)
-    return path.is_file() and path.stat().st_size > 0
+    if not path.is_absolute():
+        path = base / path
+    path = path.resolve()
+    if not path.is_relative_to(base.resolve()):
+        return None
+    return path
+
+
+def artifact_exists(result):
+    path = audio_path(result)
+    return bool(path and path.is_file() and path.stat().st_size > 0)
 
 
 async def process_one(db_factory, service, *, timeout_seconds=3600,
@@ -49,7 +59,7 @@ async def process_one(db_factory, service, *, timeout_seconds=3600,
                 duplicates = await db.query(
                     "SELECT id, status, result, error_message FROM command "
                     "WHERE app = $app AND name = $name AND args = $args "
-                    "AND (context ?? {}) = $context ORDER BY id ASC",
+                    "AND (context ?? {}) = $context AND duplicate_of = NONE ORDER BY id ASC",
                     {'app': cmd['app'], 'name': cmd['name'], 'args': cmd['args'],
                      'context': cmd.get('context') or {}},
                 )

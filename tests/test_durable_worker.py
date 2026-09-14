@@ -5,6 +5,12 @@ from types import SimpleNamespace
 import pytest
 
 from patches.durable_worker import process_one
+from patches.durable_worker import audio_path
+
+
+def test_audio_relative_path_resolves_in_podcast_storage_only(tmp_path):
+    assert audio_path({'audio_file_path': 'episodes/id/audio/file.mp3'}, tmp_path) == tmp_path / 'episodes/id/audio/file.mp3'
+    assert audio_path({'audio_file_path': '../outside.mp3'}, tmp_path) is None
 
 
 class Database:
@@ -25,7 +31,7 @@ class Database:
             if params and 'args' in params:
                 return [r.copy() for r in self.rows if r['args'] == params['args']
                         and r['app'] == params['app'] and r['name'] == params['name']
-                        and (r.get('context') or {}) == params['context']]
+                        and (r.get('context') or {}) == params['context'] and not r.get('duplicate_of')]
             return sorted([r.copy() for r in self.rows if r['status'] == 'new'
                            and (not params or r['id'] > params['cursor'])], key=lambda r: r['id'])[:100]
         row = next(r for r in self.rows if r['id'] == params['id'])
@@ -171,6 +177,17 @@ def test_service_absorbed_error_is_read_back_as_failed():
     async def execute(*args):
         db.rows[0]['status'] = 'failed'
     assert run(db, execute) == 'failed'
+
+
+def test_explicitly_requeued_original_is_not_blocked_by_its_replica():
+    original = command('command:a')
+    replica = command('command:b', 'failed')
+    replica['duplicate_of'] = original['id']
+    db = Database([original, replica])
+    async def execute(*args):
+        original['status'] = 'completed'
+    assert run(db, execute) == 'executed'
+    assert replica['status'] == 'failed'
 
 
 def test_cancel_during_execution_cannot_be_overwritten():

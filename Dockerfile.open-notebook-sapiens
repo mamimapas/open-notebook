@@ -1,5 +1,5 @@
 FROM lfnovo/open_notebook@sha256:e53f90d6153fcf4a64604d9a0c12cb0428a32cfb8dbcbb72e81ab12c013ee330
 
-COPY patches/podcast_creator_retry.py patches/durable_worker.py patches/install_recovery.py /tmp/sapiens-patches/
+COPY patches/podcast_creator_retry.py patches/durable_worker.py patches/transcript_parser.py patches/install_recovery.py /tmp/sapiens-patches/
 RUN /app/.venv/bin/python /tmp/sapiens-patches/install_recovery.py \
     && /app/.venv/bin/python -c "import surreal_commands.core.worker as w; assert w.listen_for_commands.__module__.endswith('sapiens_durable_worker'); from langchain_core.exceptions import OutputParserException; import podcast_creator.retry as r; assert r._is_retryable(OutputParserException('invalid json')); assert not r._is_retryable(ValueError('bad input'))"
