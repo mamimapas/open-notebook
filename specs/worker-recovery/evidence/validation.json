@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "scope": "M-001 focal code, database and container validation; not publication",
+  "attempts": [
+    {"attempt": 1, "status": "FAIL", "command": "pytest tests/test_durable_worker.py -q", "output": "ModuleNotFoundError before implementation"},
+    {"attempt": 2, "status": "FAIL", "command": "pytest tests/test_durable_worker.py::test_claim_lost_never_executes -q with claim guard deliberately disabled", "output": "1 failed: second worker executed without claim; mutation restored"},
+    {"attempt": 3, "status": "PASS", "command": "pytest tests/test_durable_worker.py -q", "output": "16 passed in 0.62s"}
+  ],
+  "database_canary": {"status": "PASS", "command": "docker exec open-notebook-open_notebook-1 /app/.venv/bin/python /tmp/worker_database_canary.py", "checks": ["conditional claim", "owner fencing", "cancel preservation", "unique create", "NONE/NULL/empty context equivalence", "exact temporary record cleanup"]},
+  "linux_lock_canary": {"status": "PASS", "command": "docker run --rm --entrypoint /app/.venv/bin/python --mount type=bind,source=<worktree>/tests/worker_lock_canary.py,target=/tmp/worker_lock_canary.py,readonly sapiens/open-notebook:20260914-durable-worker /tmp/worker_lock_canary.py", "output": "PASS: concurrent consumer excluded; lock released after owner exits"},
+  "independent_review": "worker_review: initial REQUEST CHANGES; all reported blockers corrected and final approval for controlled deployment",
+  "image": "sha256:ab43b7ff7d72e1367883bd9e998227b57edf508223d2cc0500be9388a5550a59",
+  "rollback_image": "sapiens/open-notebook:1.14.0-json-retry",
+  "deployment": "existing open_notebook service only; original G-backed volumes and DB preserved",
+  "acceptance": "NO_VERIFICABLE until original commands produce audio and FASTAPI reconciles delivery",
+  "skill_feedback": "NO_CHANGE"
+}

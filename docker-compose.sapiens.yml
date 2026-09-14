@@ -48,12 +48,16 @@ services:
   # Los ficheros quedan como referencia; el servicio NO se levanta.
 
   open_notebook:
-    image: lfnovo/open_notebook:v1-latest
+    build:
+      context: .
+      dockerfile: Dockerfile.open-notebook-sapiens
+    image: sapiens/open-notebook:20260914-durable-worker
     ports:
       - "8502:8502"   # Web UI
       - "5055:5055"   # REST API (la que consumirán los crons)
     environment:
-      - OPEN_NOTEBOOK_ENCRYPTION_KEY=${OPEN_NOTEBOOK_ENCRYPTION_KEY:-0FKha3Bhe3VGlW91ZmATcUgEadnCwZ2SGGcMnmT2dPQ}
+      - OPEN_NOTEBOOK_ENCRYPTION_KEY=${OPEN_NOTEBOOK_ENCRYPTION_KEY:?required_in_dotenv}
+      - OPEN_NOTEBOOK_WORKER_MAX_TASKS=1
       - SURREAL_URL=ws://surrealdb:8000/rpc
       - SURREAL_USER=root
       - SURREAL_PASSWORD=root
@@ -66,4 +70,3 @@ services:
       - embeddings
       - edge_tts
     restart: always
-    pull_policy: always

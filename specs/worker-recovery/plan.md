@@ -1,0 +1,9 @@
+# Implementation plan
+
+Patch the existing surreal-commands listener through the already maintained Docker image patch mechanism. Use its db_connection and command_service interfaces. A single polling loop selects one oldest new command; a conditional UPDATE WHERE status=new RETURN AFTER is the ownership boundary. No additional package or queue infrastructure.
+
+Before executing generate_podcast, compute exact payload equality against commands of the same app/name/context; completed results with real nonempty audio are reused, an active duplicate blocks, and among queued duplicates the lexicographically smallest record ID is canonical. Keyset pagination prevents starvation. A Linux flock on the existing shared data volume excludes concurrent consumers, including claims on distinct IDs. All queries use parameter bindings. Timeout is 3600 seconds per command using asyncio.wait: uncertain cancellation freezes consumption rather than waiting indefinitely or admitting more work. Failure to read or claim does not invoke the model. The upstream result writer is scoped to a conditional owner/status update so administrative cancellation cannot be overwritten.
+
+Keep the existing upstream image pin and JSON retry patch. Add a standalone patch module copied into the installed worker package; rebind listen_for_commands. Test the patch using injectable database and executor fakes and verify the installed binding at build time.
+
+Rollout: stop only the current consumer after confirming no current command is running; build a new tagged image; recreate only the existing open_notebook service with existing network, secrets and G-backed volumes. Roll back to the previous image digest if readiness fails, preserving the database.
