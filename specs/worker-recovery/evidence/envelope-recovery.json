@@ -7,8 +7,10 @@
   "green": "35 passed in 0.40s: worker, authority and transcript tests",
   "independent_review": "worker_review ran in-memory real installed Pydantic canary: original return type and duplicate-key rejection PASS; requested wrapper regression added",
   "recovery_authority": "No further requeue of twice-failed IA13 identity; no new upload or Telegram send",
-  "runtime_loaded": false,
+  "runtime_loaded": true,
+  "runtime_readback": {"observed_at": "2026-09-14T06:34:33Z", "health_http": 200, "image": "sha256:42d511c689cddbe86d114da12d0ad2b79a9d4e64c831fc2db51ce28c4eeb6e37", "canary": "installed Pydantic preserved original object, exact dialogue envelope and unlabelled rejection PASS"},
+  "terminal_recovery": {"real13_part1": "completed; MP3 13725613 bytes; not full episode", "papers13": "completed; MP3 16941391 bytes; 1058.821224 seconds below contract", "ia13": "failed second attempt; missing transcript envelope", "real12": "failed second attempt; raw list returned instead of transcript envelope", "publication": "No upload or Telegram send performed"},
   "global_status": "BLOCKED",
-  "next_action": "Deploy only after current owned command terminates, then run installed parser canary. Recover full dated episodes and publication receipts separately.",
+  "next_action": "Historical regeneration remains BLOCKED at two-attempt limit. Resolve missing historical source URLs and whole-episode recovery/checkpoints before any authorized new attempt. No public delivery or global health claimed.",
   "skill_feedback": "NO_CHANGE"
 }

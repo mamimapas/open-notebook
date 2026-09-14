@@ -51,7 +51,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.open-notebook-sapiens
-    image: sapiens/open-notebook:20260914-json-contract
+    image: sapiens/open-notebook:20260914-envelope-contract
     ports:
       - "8502:8502"   # Web UI
       - "5055:5055"   # REST API (la que consumirán los crons)
