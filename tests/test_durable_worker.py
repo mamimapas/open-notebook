@@ -101,6 +101,30 @@ def test_known_parser_failure_can_be_retried_after_parser_fix():
     assert db.rows[0]['status'] == 'failed'
 
 
+def test_empty_outline_json_failure_can_be_retried_without_reusing_failed_command():
+    original = command('command:a', 'failed')
+    original['error_message'] = 'Invalid json output: \nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langchain/errors/OUTPUT_PARSING_FAILURE '
+    db = Database([original, command('command:b')])
+    calls = []
+    async def execute(id, *args):
+        calls.append(id)
+        next(r for r in db.rows if r['id'] == id)['status'] = 'completed'
+    assert run(db, execute) == 'executed'
+    assert calls == ['command:b']
+    assert db.rows[0]['status'] == 'failed'
+
+
+def test_nonempty_or_unknown_parser_failure_remains_contained():
+    from patches.durable_worker import parser_failure_without_artifact
+    assert not parser_failure_without_artifact({
+        'status': 'failed', 'error_message': 'Invalid json output: {malformed}'})
+    assert not parser_failure_without_artifact({
+        'status': 'failed', 'error_message': 'WORKER_INTERRUPTED_OUTCOME_UNKNOWN'})
+    assert not parser_failure_without_artifact({
+        'status': 'failed', 'error_message': 'Invalid json output: ',
+        'result': {'audio_file_path': 'already-created.mp3'}})
+
+
 def test_unknown_failed_outcome_is_not_automatically_retried():
     original = command('command:a', 'failed')
     original['error_message'] = 'WORKER_INTERRUPTED_OUTCOME_UNKNOWN'

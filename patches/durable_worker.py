@@ -49,12 +49,13 @@ def artifact_exists(result):
 
 def parser_failure_without_artifact(row):
     """One known pre-audio failure may be retried after a parser deployment."""
+    error = str(row.get('error_message') or '')
+    empty_outline = error.split('For troubleshooting', 1)[0].strip() == 'Invalid json output:'
     return (
         row.get('status') == 'failed'
         and not row.get('result')
-        and str(row.get('error_message') or '').startswith(
-            'Failed to parse ValidatedTranscript from completion'
-        )
+        and (error.startswith('Failed to parse ValidatedTranscript from completion')
+             or empty_outline)
     )
 
 
