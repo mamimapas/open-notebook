@@ -4,7 +4,7 @@ import re
 
 
 def normalize_dialogue_envelope(text, names):
-    """Rename one known transport key without deleting or inventing content."""
+    """Wrap fully labelled transport dialogue without deleting or inventing content."""
     def unique_pairs(pairs):
         result = {}
         for key, value in pairs:
@@ -13,9 +13,12 @@ def normalize_dialogue_envelope(text, names):
             result[key] = value
         return result
     value = json.loads(text, object_pairs_hook=unique_pairs)
-    if not isinstance(value, dict) or set(value) != {'dialogue'}:
+    if isinstance(value, dict) and set(value) == {'dialogue'}:
+        turns = value['dialogue']
+    elif isinstance(value, list):
+        turns = value
+    else:
         raise ValueError('TRANSCRIPT_AMBIGUOUS_ENVELOPE')
-    turns = value['dialogue']
     if not isinstance(turns, list) or not turns:
         raise ValueError('TRANSCRIPT_EMPTY')
     for turn in turns:
@@ -61,14 +64,18 @@ def wrap_parser_factory(original_factory):
 
             def invoke(self, value, *args, **kwargs):
                 from langchain_core.exceptions import OutputParserException
+                from langchain_core.messages import BaseMessage
                 try:
                     return parser.invoke(value, *args, **kwargs)
                 except OutputParserException as original_error:
+                    raw = value.content if isinstance(value, BaseMessage) else value
+                    if not isinstance(raw, str):
+                        raise original_error
                     try:
-                        converted = labelled_dialogue_json(value, names)
+                        converted = labelled_dialogue_json(raw, names)
                     except ValueError:
                         try:
-                            converted = normalize_dialogue_envelope(value, names)
+                            converted = normalize_dialogue_envelope(raw, names)
                         except (ValueError, TypeError):
                             raise original_error
                     return parser.invoke(converted, *args, **kwargs)

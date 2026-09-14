@@ -23,6 +23,29 @@ def test_adapter_revalidates_envelope_and_keeps_return_type():
     assert parser.invoke(json.dumps({'dialogue': turns})) == tuple(turns)
 
 
+@pytest.mark.parametrize('as_message', [False, True])
+@pytest.mark.parametrize('as_array', [False, True])
+def test_adapter_accepts_complete_transport_dialogue_without_model_retry(as_message, as_array):
+    from langchain_core.exceptions import OutputParserException
+    from langchain_core.messages import AIMessage
+
+    class Parser:
+        def invoke(self, value):
+            if isinstance(value, AIMessage):
+                value = value.content
+            parsed = json.loads(value)
+            if not isinstance(parsed, dict) or 'transcript' not in parsed:
+                raise OutputParserException('transcript required')
+            return tuple(parsed['transcript'])
+
+    turns = [{'speaker': 'Daniel', 'dialogue': '¿Qué sabemos?'},
+             {'speaker': 'Elena', 'dialogue': 'Solo lo confirmado.'}]
+    payload = turns if as_array else {'dialogue': turns}
+    raw = json.dumps(payload)
+    parser = wrap_parser_factory(lambda names: Parser())(['Daniel', 'Elena'])
+    assert parser.invoke(AIMessage(content=raw) if as_message else raw) == tuple(turns)
+
+
 def test_duplicate_json_keys_are_not_silently_discarded():
     with pytest.raises(ValueError, match='DUPLICATE_JSON_KEY'):
         normalize_dialogue_envelope('{"dialogue": [], "dialogue": []}', ['Daniel', 'Elena'])
