@@ -6,6 +6,8 @@ result = parser.invoke('Daniel: Pregunta.\nElena: Respuesta.')
 assert len(result.transcript) == 2
 assert result.transcript[1].speaker == 'Elena'
 assert result.model_dump()['transcript'][0]['dialogue'] == 'Pregunta.'
+wrapped = parser.invoke('{"dialogue": [{"speaker": "Daniel", "dialogue": "Pregunta."}, {"speaker": "Elena", "dialogue": "Respuesta."}]}')
+assert wrapped.model_dump() == result.model_dump()
 try:
     parser.invoke('Preamble\nDaniel: Pregunta.\nElena: Respuesta.')
 except OutputParserException:

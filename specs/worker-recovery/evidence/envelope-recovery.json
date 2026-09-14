@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "scope": "Lossless transcript transport adapter only; not delivery",
+  "observed_at": "2026-09-14T06:30:03Z",
+  "cause": "IA13 second attempt returned exact dialogue envelope; original Pydantic requires transcript",
+  "red": "test import failed before normalize_dialogue_envelope existed",
+  "green": "35 passed in 0.40s: worker, authority and transcript tests",
+  "independent_review": "worker_review ran in-memory real installed Pydantic canary: original return type and duplicate-key rejection PASS; requested wrapper regression added",
+  "recovery_authority": "No further requeue of twice-failed IA13 identity; no new upload or Telegram send",
+  "runtime_loaded": false,
+  "global_status": "BLOCKED",
+  "next_action": "Deploy only after current owned command terminates, then run installed parser canary. Recover full dated episodes and publication receipts separately.",
+  "skill_feedback": "NO_CHANGE"
+}

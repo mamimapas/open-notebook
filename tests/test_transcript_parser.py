@@ -1,6 +1,42 @@
 import json
 import pytest
-from patches.transcript_parser import labelled_dialogue_json, wrap_parser_factory
+from patches.transcript_parser import labelled_dialogue_json, wrap_parser_factory, normalize_dialogue_envelope
+
+
+def test_exact_dialogue_envelope_is_lossless():
+    turns = [{'speaker': 'Daniel', 'dialogue': '¿Qué sabemos?'},
+             {'speaker': 'Elena', 'dialogue': 'Solo lo confirmado.'}]
+    assert json.loads(normalize_dialogue_envelope(json.dumps({'dialogue': turns}), ['Daniel', 'Elena'])) == {'transcript': turns}
+
+
+def test_adapter_revalidates_envelope_and_keeps_return_type():
+    from langchain_core.exceptions import OutputParserException
+    class Parser:
+        def invoke(self, value):
+            parsed = json.loads(value)
+            if 'transcript' not in parsed:
+                raise OutputParserException('transcript required')
+            return tuple(parsed['transcript'])
+    turns = [{'speaker': 'Daniel', 'dialogue': 'Pregunta.'},
+             {'speaker': 'Elena', 'dialogue': 'Respuesta.'}]
+    parser = wrap_parser_factory(lambda names: Parser())(['Daniel', 'Elena'])
+    assert parser.invoke(json.dumps({'dialogue': turns})) == tuple(turns)
+
+
+def test_duplicate_json_keys_are_not_silently_discarded():
+    with pytest.raises(ValueError, match='DUPLICATE_JSON_KEY'):
+        normalize_dialogue_envelope('{"dialogue": [], "dialogue": []}', ['Daniel', 'Elena'])
+
+
+@pytest.mark.parametrize('value', [
+    {'dialogue': [], 'extra': 'must not disappear'},
+    {'dialogue': []},
+    {'dialogue': [{'speaker': 'Daniel', 'dialogue': 'Incomplete'}]},
+    {'dialogue': [{'speaker': 'Intruso', 'dialogue': 'Completo.'}]},
+])
+def test_ambiguous_envelopes_stay_blocked(value):
+    with pytest.raises(ValueError):
+        normalize_dialogue_envelope(json.dumps(value), ['Daniel', 'Elena'])
 
 
 @pytest.mark.parametrize('labels', [('{name}:', '{name}:'), ('**{name}:**', '**{name}**:')])
