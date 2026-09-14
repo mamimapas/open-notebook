@@ -47,6 +47,17 @@ def artifact_exists(result):
     return bool(path and path.is_file() and path.stat().st_size > 0)
 
 
+def parser_failure_without_artifact(row):
+    """One known pre-audio failure may be retried after a parser deployment."""
+    return (
+        row.get('status') == 'failed'
+        and not row.get('result')
+        and str(row.get('error_message') or '').startswith(
+            'Failed to parse ValidatedTranscript from completion'
+        )
+    )
+
+
 async def process_one(db_factory, service, *, timeout_seconds=3600,
                       verify_artifact=artifact_exists):
     commands = pending(db_factory)
@@ -66,7 +77,8 @@ async def process_one(db_factory, service, *, timeout_seconds=3600,
             others = [r for r in duplicates or [] if str(r['id']) != str(id)]
             terminal = next((r for r in others if r['status'] == 'completed'), None)
             if terminal is None:
-                terminal = next((r for r in others if r['status'] == 'failed'), None)
+                terminal = next((r for r in others if r['status'] == 'failed'
+                                 and not parser_failure_without_artifact(r)), None)
             if terminal:
                 if terminal['status'] == 'completed' and not verify_artifact(terminal.get('result')):
                     # Preserve both identities for explicit artifact reconciliation.
