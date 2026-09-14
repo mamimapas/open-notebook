@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "scope": "M-002 parser transport and original-command recovery authorization, not delivery",
+  "incident": "Original Real News 13 and IA13 returned speaker-labelled prose instead of JSON; Real News12 returned invalid schema-shaped dialogue. The first image resumed the queue but exposed these upstream parser failures.",
+  "tests": {"command": "pytest tests/test_parser_recovery_authority.py tests/test_transcript_parser.py tests/test_durable_worker.py -q", "output": "28 passed in 0.53s"},
+  "installed_parser_canary": "PASS original Pydantic type and rejection of unlabelled content",
+  "review": "worker_review independently approved parser adapter and existing route binding",
+  "image": "sha256:a3f319d30039d53c4f7f5770d316b4db59578c7f534172524a8d216feb00c66e",
+  "rollback_image": "sapiens/open-notebook:20260914-durable-worker",
+  "recovery": {
+    "at": "2026-09-14T06:18:04Z",
+    "command": "docker exec open-notebook-open_notebook-1 /app/.venv/bin/python /tmp/requeue_verified_parser_failures.py --apply",
+    "original_ids": ["command:at8e2d2rcwk94epq97km", "command:hgz5zntxn8x8m8058g3y", "command:yk8bhysma83pky7qv7n4"],
+    "guard": "known terminal parser failure, no result, exact episode, no replica and no prior recovery; conditional update preserves original args and appends previous-error/args hashes",
+    "state": "REQUEUED_ORIGINAL; final audio pending"
+  },
+  "papers_original": {"command_id": "command:us5rzz2p23xh1ku26u9e", "status": "completed", "audio_bytes": 16941391, "duration_seconds": 1058.821224, "delivery": "BLOCKED: below FASTAPI 1500-second minimum, not sent or uploaded"},
+  "no_new_schedules": true,
+  "skill_feedback": "NO_CHANGE"
+}
