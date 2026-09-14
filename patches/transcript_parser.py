@@ -5,6 +5,11 @@ import re
 
 def normalize_dialogue_envelope(text, names):
     """Wrap fully labelled transport dialogue without deleting or inventing content."""
+    # The model may wrap an otherwise valid JSON envelope in one Markdown fence.
+    # Require the fence to occupy the entire response; prose outside it is not safe.
+    fenced = re.fullmatch(r'\s*```(?:json|JSON)?\s*\n([\s\S]*?)\n```\s*', text)
+    if fenced:
+        text = fenced.group(1)
     def unique_pairs(pairs):
         result = {}
         for key, value in pairs:

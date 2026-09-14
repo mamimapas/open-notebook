@@ -9,6 +9,8 @@ assert result.transcript[1].speaker == 'Elena'
 assert result.model_dump()['transcript'][0]['dialogue'] == 'Pregunta.'
 wrapped = parser.invoke('{"dialogue": [{"speaker": "Daniel", "dialogue": "Pregunta."}, {"speaker": "Elena", "dialogue": "Respuesta."}]}')
 assert wrapped.model_dump() == result.model_dump()
+fenced = parser.invoke('```json\n{"dialogue": [{"speaker": "Daniel", "dialogue": "Pregunta."}, {"speaker": "Elena", "dialogue": "Respuesta."}]}\n```')
+assert fenced.model_dump() == result.model_dump()
 for content in (
     '{"dialogue": [{"speaker": "Daniel", "dialogue": "Pregunta."}, {"speaker": "Elena", "dialogue": "Respuesta."}]}',
     '[{"speaker": "Daniel", "dialogue": "Pregunta."}, {"speaker": "Elena", "dialogue": "Respuesta."}]',

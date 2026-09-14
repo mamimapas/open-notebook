@@ -23,6 +23,26 @@ def test_adapter_revalidates_envelope_and_keeps_return_type():
     assert parser.invoke(json.dumps({'dialogue': turns})) == tuple(turns)
 
 
+def test_adapter_accepts_only_a_single_fenced_json_envelope():
+    from langchain_core.exceptions import OutputParserException
+    class Parser:
+        def invoke(self, value):
+            try:
+                parsed = json.loads(value)
+            except ValueError:
+                raise OutputParserException('invalid json')
+            if 'transcript' not in parsed:
+                raise OutputParserException('transcript required')
+            return tuple(parsed['transcript'])
+    turns = [{'speaker': 'Daniel', 'dialogue': 'Pregunta.'},
+             {'speaker': 'Elena', 'dialogue': 'Respuesta.'}]
+    parser = wrap_parser_factory(lambda names: Parser())(['Daniel', 'Elena'])
+    fenced = '```json\n' + json.dumps({'dialogue': turns}) + '\n```'
+    assert parser.invoke(fenced) == tuple(turns)
+    with pytest.raises(OutputParserException):
+        parser.invoke('Introducción ajena.\n' + fenced)
+
+
 @pytest.mark.parametrize('as_message', [False, True])
 @pytest.mark.parametrize('as_array', [False, True])
 def test_adapter_accepts_complete_transport_dialogue_without_model_retry(as_message, as_array):
